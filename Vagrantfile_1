@@ -1,0 +1,48 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANT_API_VERSION = "2"
+
+Vagrant.configure(VAGRANT_API_VERSION) do |config|
+  servers=[    
+    {
+      :hostname => "centos1",
+      :box => "centos/7",
+      :ram => 1024,
+      :cpu => 1
+    },
+    {
+      :hostname => "controller",
+      :box => "centos/7",
+      :ram => 1024,
+      :cpu => 1,
+      :controller => true
+    }	
+  ]
+  
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the ne documentation at
+  # https://docs.vagrantup.com.
+
+  servers.each do |machine|
+    config.vm.define machine[:hostname] do |node|
+        node.vm.box = machine[:box]
+        node.vm.provider "hyperv" do |h|
+            h.vmname = machine[:hostname]
+          	h.memory = machine[:ram]
+            h.cpus = machine[:cpu]
+        end
+	# Run Ansible playbook on the master host
+        $installation_script = <<-SCRIPT
+        yum update -y
+        yum upgrade -y
+        yum install epel-release -y
+        yum install ansible -y
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        #echo "centos:centos" | sudo chpasswd
+        systemctl restart sshd		
+        SCRIPT
+        config.vm.provision "shell", inline: $installation_script  		
+    end
+  end
+end
