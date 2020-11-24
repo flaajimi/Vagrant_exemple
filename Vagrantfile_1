@@ -16,7 +16,6 @@ Vagrant.configure(VAGRANT_API_VERSION) do |config|
       :box => "centos/7",
       :ram => 1024,
       :cpu => 1,
-      :controller => true
     }	
   ]
   
